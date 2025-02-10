@@ -62,11 +62,11 @@ continents
 
     -   Which variable(s) will we use to join the `population` and `continents` data frames?
 
-    Add response here.
+Will we need to complete a join on the `country` variable from **population** and the `entity` variable from **continents**
 
     -   We want to create a new data frame that keeps all rows and columns from `population` and brings in the corresponding information from `continents`. Which join function should we use?
 
-    Add response here.
+We should use a **left_join()** to keep everything from the first table, and add information where matched from the second.
 
 -   **Demo:** Join the two data frames and name assign the joined data frame to a new data frame `population_continents`.
 
@@ -74,6 +74,8 @@ continents
 #| label: join-population-continents
 
 # add code here
+population_continents <- left_join(population, continents, 
+                                   by=c("country"="entity"))
 ```
 
 -   **Demo:** Take a look at the newly created `population_continent` data frame. There are some countries that were not in `continents`. First, identify which countries these are (they will have `NA` values for `continent`).
@@ -82,19 +84,32 @@ continents
 #| label: data-inspect
 
 # add code here
+population_continents |> 
+  filter(is.na(continent))
 ```
 
 -   **Demo:** All of these countries are actually in the `continents` data frame, but under different names. So, let's clean that data first by updating the country names in the `population` data frame in a way they will match the `continents` data frame, and then joining them, using a `case_when()` statement in `mutate()`. At the end, check that all countries now have continent information.
 
 ```{r}
 #| label: data-clean
-
-# add code here
+population <- population |> 
+  mutate(country = 
+           case_when(
+             country == "Congo, Dem. Rep." ~ "Democratic Republic of Congo",
+             country == "Congo, Rep." ~ "Congo",
+             country == "Hong Kong SAR, China" ~ "Hong Kong",
+             country == "Korea, Dem. People's Rep." ~ "North Korea",
+             country == "Korea, Rep." ~ "South Korea",
+             country == "Kyrgyz Republic" ~ "Kyrgyzstan",
+             TRUE ~ country))
+population_continents <- left_join(population, continents, 
+                                   by=c("country"="entity"))
+population_continents |> filter(is.na(continent))
 ```
 
 -   **Think out loud:** Which continent do you think has the highest population? Which do you think has the second highest? The lowest?
 
-Add your response here.
+My expectation is that Asia will have the higest population, second highest perhaps Europe, and lowest, I would expect Antarctica.
 
 -   **Demo:** Create a new data frame called `population_summary` that contains a row for each continent and a column for the total population for that continent, in descending order of population. Note that the function for calculating totals in R is `sum()`.
 
@@ -102,6 +117,7 @@ Add your response here.
 #| label: population-continents-sum
 
 # add code here
+
 ```
 
 -   **Your turn:** Make a bar plot with total population on the y-axis and continent on the x-axis, where the height of each bar represents the total population in that continent.
