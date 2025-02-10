@@ -109,14 +109,17 @@ population_continents |> filter(is.na(continent))
 
 -   **Think out loud:** Which continent do you think has the highest population? Which do you think has the second highest? The lowest?
 
-My expectation is that Asia will have the higest population, second highest perhaps Europe, and lowest, I would expect Antarctica.
+My expectation is that Asia will have the higest population, second highest Africa, and lowest, I would expect Oceania, or Antarctica, if included.
 
 -   **Demo:** Create a new data frame called `population_summary` that contains a row for each continent and a column for the total population for that continent, in descending order of population. Note that the function for calculating totals in R is `sum()`.
 
 ```{r}
 #| label: population-continents-sum
-
 # add code here
+population_summary <- population_continents |> 
+  summarise(total_population = sum(population), .by = "continent") |> 
+  arrange(desc(total_population))
+population_summary
 
 ```
 
@@ -126,6 +129,16 @@ My expectation is that Asia will have the higest population, second highest perh
 #| label: population-summary-bar
 
 # add code here
+population_summary |> 
+  mutate(continent = factor(continent, levels = c("Asia", "Africa", "Europe","North America", "South America", "Oceania"))) |> 
+  ggplot(aes(x=continent, y=total_population/1000000, fill = continent)) +
+  geom_col(color="black") +
+  theme_classic() +
+  scale_fill_viridis_d(option="D") +
+  theme(legend.position = "none") +
+  labs(x = "Continent",
+       y ="Population (billions)",
+       title = "Human Population by Continent, 2022")
 ```
 
 -   **Your turn:** Recreate the following plot, which is commonly referred to as a **lollipop plot**. Hint: Start with the points, then try adding the `segment`s, then add axis labels and `caption`, and finally, as a stretch goal, update the x scale (which will require a function we haven't introduced in lectures or labs yet!).
@@ -137,6 +150,18 @@ My expectation is that Asia will have the higest population, second highest perh
 #| fig-asp: 0.4
 
 # add code here
+population_summary |> 
+  ggplot(aes(x=total_population, y=continent)) +
+  geom_point() +
+  geom_segment(aes(x=0, xend=total_population,
+                   y=continent, yend = continent)) +
+  theme_minimal() +
+  scale_x_continuous(labels = ~ paste0(. / 1000000, " bil")) +
+  labs(x = "Total Population",
+       y = "Continent",
+       title = "World Population",
+       subtitle = "As of 2022",
+       caption = "Data sources: The World Bank and Our World in Data")
 ```
 
 -   **Think out loud:** What additional improvements would you like to make to this plot.
