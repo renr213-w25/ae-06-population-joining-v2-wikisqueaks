@@ -166,4 +166,36 @@ population_summary |>
 
 -   **Think out loud:** What additional improvements would you like to make to this plot.
 
-Add your response here.
+- I would include the units in the axis title rather than on the axis value labels. "bil" is not an SI recognized acronym. Should be "Total Population (billions)".
+
+- Visually, it's quite bland. Colouring the segements and points would be nice.
+
+- I think ordering the segments in descending magnitude is more visually appealing and easier to make basic inferences and comparisons between similaril values.
+
+- The grid lines don't really add anything here.
+
+- The title isn't descriptive of the graph completely.
+
+- Labelling the Y axis "Continent" seems excessive and basic knowledge. That could be in the title of the graph instead.
+
+```{r}
+#| fig-asp: 0.4
+
+# add code here
+population_summary |> 
+  mutate(continent = fct_rev(factor(continent, levels = c("Asia", "Africa", "Europe","North America", "South America", "Oceania")))) |> 
+  ggplot(aes(x=total_population/1000000, y=continent, color=continent)) +
+  geom_point(size=3.5) +
+  geom_segment(aes(x=0, xend=total_population/1000000,
+                   y=continent, yend = continent), size=1.5) +
+  theme_classic() +
+  scale_color_viridis_d(option="D", begin=0.2,end=.8) +
+  theme(legend.position = "none") +
+  labs(x = "Population (billions)",
+       y = "",
+       title = "World Population by Continent",
+       subtitle = "Year 2022",
+       caption = "Data sources: The World Bank and Our World in Data")
+
+```
+
