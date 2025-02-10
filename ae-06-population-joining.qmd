@@ -62,11 +62,11 @@ continents
 
     -   Which variable(s) will we use to join the `population` and `continents` data frames?
 
-    Add response here.
+Will we need to complete a join on the `country` variable from **population** and the `entity` variable from **continents**
 
     -   We want to create a new data frame that keeps all rows and columns from `population` and brings in the corresponding information from `continents`. Which join function should we use?
 
-    Add response here.
+We should use a **left_join()** to keep everything from the first table, and add information where matched from the second.
 
 -   **Demo:** Join the two data frames and name assign the joined data frame to a new data frame `population_continents`.
 
@@ -74,6 +74,8 @@ continents
 #| label: join-population-continents
 
 # add code here
+population_continents <- left_join(population, continents, 
+                                   by=c("country"="entity"))
 ```
 
 -   **Demo:** Take a look at the newly created `population_continent` data frame. There are some countries that were not in `continents`. First, identify which countries these are (they will have `NA` values for `continent`).
@@ -82,26 +84,43 @@ continents
 #| label: data-inspect
 
 # add code here
+population_continents |> 
+  filter(is.na(continent))
 ```
 
 -   **Demo:** All of these countries are actually in the `continents` data frame, but under different names. So, let's clean that data first by updating the country names in the `population` data frame in a way they will match the `continents` data frame, and then joining them, using a `case_when()` statement in `mutate()`. At the end, check that all countries now have continent information.
 
 ```{r}
 #| label: data-clean
-
-# add code here
+population <- population |> 
+  mutate(country = 
+           case_when(
+             country == "Congo, Dem. Rep." ~ "Democratic Republic of Congo",
+             country == "Congo, Rep." ~ "Congo",
+             country == "Hong Kong SAR, China" ~ "Hong Kong",
+             country == "Korea, Dem. People's Rep." ~ "North Korea",
+             country == "Korea, Rep." ~ "South Korea",
+             country == "Kyrgyz Republic" ~ "Kyrgyzstan",
+             TRUE ~ country))
+population_continents <- left_join(population, continents, 
+                                   by=c("country"="entity"))
+population_continents |> filter(is.na(continent))
 ```
 
 -   **Think out loud:** Which continent do you think has the highest population? Which do you think has the second highest? The lowest?
 
-Add your response here.
+My expectation is that Asia will have the higest population, second highest Africa, and lowest, I would expect Oceania, or Antarctica, if included.
 
 -   **Demo:** Create a new data frame called `population_summary` that contains a row for each continent and a column for the total population for that continent, in descending order of population. Note that the function for calculating totals in R is `sum()`.
 
 ```{r}
 #| label: population-continents-sum
-
 # add code here
+population_summary <- population_continents |> 
+  summarise(total_population = sum(population), .by = "continent") |> 
+  arrange(desc(total_population))
+population_summary
+
 ```
 
 -   **Your turn:** Make a bar plot with total population on the y-axis and continent on the x-axis, where the height of each bar represents the total population in that continent.
@@ -110,6 +129,16 @@ Add your response here.
 #| label: population-summary-bar
 
 # add code here
+population_summary |> 
+  mutate(continent = factor(continent, levels = c("Asia", "Africa", "Europe","North America", "South America", "Oceania"))) |> 
+  ggplot(aes(x=continent, y=total_population/1000000, fill = continent)) +
+  geom_col(color="black") +
+  theme_classic() +
+  scale_fill_viridis_d(option="D") +
+  theme(legend.position = "none") +
+  labs(x = "Continent",
+       y ="Population (billions)",
+       title = "Human Population by Continent, 2022")
 ```
 
 -   **Your turn:** Recreate the following plot, which is commonly referred to as a **lollipop plot**. Hint: Start with the points, then try adding the `segment`s, then add axis labels and `caption`, and finally, as a stretch goal, update the x scale (which will require a function we haven't introduced in lectures or labs yet!).
@@ -121,8 +150,52 @@ Add your response here.
 #| fig-asp: 0.4
 
 # add code here
+population_summary |> 
+  ggplot(aes(x=total_population, y=continent)) +
+  geom_point() +
+  geom_segment(aes(x=0, xend=total_population,
+                   y=continent, yend = continent)) +
+  theme_minimal() +
+  scale_x_continuous(labels = ~ paste0(. / 1000000, " bil")) +
+  labs(x = "Total Population",
+       y = "Continent",
+       title = "World Population",
+       subtitle = "As of 2022",
+       caption = "Data sources: The World Bank and Our World in Data")
 ```
 
 -   **Think out loud:** What additional improvements would you like to make to this plot.
 
-Add your response here.
+- I would include the units in the axis title rather than on the axis value labels. "bil" is not an SI recognized acronym. Should be "Total Population (billions)".
+
+- Visually, it's quite bland. Colouring the segements and points would be nice.
+
+- I think ordering the segments in descending magnitude is more visually appealing and easier to make basic inferences and comparisons between similaril values.
+
+- The grid lines don't really add anything here.
+
+- The title isn't descriptive of the graph completely.
+
+- Labelling the Y axis "Continent" seems excessive and basic knowledge. That could be in the title of the graph instead.
+
+```{r}
+#| fig-asp: 0.4
+
+# add code here
+population_summary |> 
+  mutate(continent = fct_rev(factor(continent, levels = c("Asia", "Africa", "Europe","North America", "South America", "Oceania")))) |> 
+  ggplot(aes(x=total_population/1000000, y=continent, color=continent)) +
+  geom_point(size=3.5) +
+  geom_segment(aes(x=0, xend=total_population/1000000,
+                   y=continent, yend = continent), size=1.5) +
+  theme_classic() +
+  scale_color_viridis_d(option="D", begin=0.2,end=.8) +
+  theme(legend.position = "none") +
+  labs(x = "Population (billions)",
+       y = "",
+       title = "World Population by Continent",
+       subtitle = "Year 2022",
+       caption = "Data sources: The World Bank and Our World in Data")
+
+```
+
